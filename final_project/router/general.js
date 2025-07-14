@@ -13,11 +13,11 @@ public_users.post("/register", (req,res) => {
     return res.status(400).json({message: "Username and password are required"});
   }
 
-  if (users[username]) {
+  if (isValid(username)) {
     return res.status(400).json({message: "User already exists"});
   }
-  
-  users[username] = { password: password };
+
+  users.push({ "username": username, "password": password });
   return res.status(201).json({message: "User registered successfully"});
 });
 
@@ -25,6 +25,13 @@ public_users.post("/register", (req,res) => {
 public_users.get('/',function (req, res) {
   const book_list = JSON.stringify(books, null, 4);
   return res.status(200).send(book_list);
+});
+
+public_users.get("/users", (req, res) => {
+  if (users.length === 0) {
+    return res.status(404).json({message: "No users found"});
+  }
+  return res.status(200).json(users);
 });
 
 // Get book details based on ISBN
