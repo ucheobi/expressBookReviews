@@ -1,9 +1,9 @@
 const express = require('express');
+const  axios = require('axios');
 let books = require("./booksdb.js");
 let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
 const public_users = express.Router();
-
 
 public_users.post("/register", (req,res) => {
   const username = req.body.username;
@@ -21,10 +21,21 @@ public_users.post("/register", (req,res) => {
   return res.status(201).json({message: "User registered successfully"});
 });
 
+// Async function to get books
+const getBooks = () => {
+  return new Promise((resolve, reject) => {
+    resolve(books);
+  });
+};
+
 // Get the book list available in the shop
-public_users.get('/',function (req, res) {
-  const book_list = JSON.stringify(books, null, 4);
-  return res.status(200).send(book_list);
+public_users.get('/',async function (req, res) {
+  try {
+    const bookList = await getBooks();
+    res.status(200).json(bookList);
+  } catch (error) {
+    return res.status(500).json({message: "Error fetching books"});
+  }
 });
 
 public_users.get("/users", (req, res) => {
