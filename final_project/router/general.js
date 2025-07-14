@@ -1,6 +1,7 @@
 const express = require('express');
 const  axios = require('axios');
 let books = require("./booksdb.js");
+const parse = require('nodemon/lib/cli/parse.js');
 let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
 const public_users = express.Router();
@@ -38,22 +39,27 @@ public_users.get('/',async function (req, res) {
   }
 });
 
-public_users.get("/users", (req, res) => {
-  if (users.length === 0) {
-    return res.status(404).json({message: "No users found"});
-  }
-  return res.status(200).json(users);
-});
+const getBookByISBN = (isbn) => {
+  return new Promise((resolve, reject) => {
+    if (books[isbn]) {
+      resolve(books[isbn]);
+    } else {
+      reject({message: "Book not found"});
+    }
+  });
+};
 
 // Get book details based on ISBN
-public_users.get('/isbn/:isbn',function (req, res) {
-  const isbn = req.params.isbn;
-  const book = books[isbn];
-  
-  if (book) {
-    return res.status(200).json(book);
+public_users.get('/isbn/:isbn', async function (req, res) {
+ try {
+    const isbn = req.params.isbn;
+    const bookIsbn = parseInt(isbn);
+    const book = await getBookByISBN(bookIsbn);
+
+    res.status(200).json(book);
+  } catch (error) {
+    return res.status(404).json(error);
   }
-  return res.status(404).json({message: "Book not found"});
 });
   
 // Get book details based on author
