@@ -22,17 +22,13 @@ regd_users.post("/login", (req,res) => {
     return res.status(400).json({message: "Username and password are required"});
   }
 
-  if (!isValid(username)) {
-    return res.status(404).json({message: "User not found"});
-  }
-
   if (authenticatedUser(username, password)) {
-    const token = jwt.sign({ username
-    }, '12233_secret', { expiresIn: 60 * 60 });
+    const token = jwt.sign({ data: password
+    }, 'access', { expiresIn: 60 * 60 });
 
     req.session.authorization = { token, username };
 
-    return res.status(200).json({message: "Login successful", token: token});
+    return res.status(200).json({message: "User successfully logged in"});
   } else {
     return res.status(401).json({message: "Invalid username or password"});
   }
@@ -41,8 +37,25 @@ regd_users.post("/login", (req,res) => {
 
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+  const isbn = req.params.isbn;
+  const review = req.body.review;
+  const username = req.session.authorization.username;
+
+  if (!isbn || !review) {
+    return res.status(400).json({message: "ISBN and review are required"});//
+  }
+
+  if (!books[isbn]) {
+    return res.status(404).json({message: "Book not found"});
+  }
+
+  if (!books[isbn].reviews) {
+    books[isbn].reviews = {};
+  }
+
+  books[isbn].reviews[username] = review;
+  
+  return res.status(200).json({message: "Review added successfully", book: books[isbn]});
 });
 
 module.exports.authenticated = regd_users;
